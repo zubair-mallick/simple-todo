@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "lib": ["es2020"],
-    "module": "esnext",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -12,9 +12,10 @@
     "resolveJsonModule": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "declaration": true,
+    "allowImportingTsExtensions": false,
+    "noEmit": false
   },
   "include": [
     "src/**/*"
@@ -22,8 +23,5 @@
   "exclude": [
     "node_modules",
     "dist"
-  ],
-  "ts-node": {
-    "esm": true
-  }
+  ]
 }

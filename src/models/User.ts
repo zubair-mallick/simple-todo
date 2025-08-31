@@ -27,7 +27,6 @@ const userSchema = new Schema<IUser>({
   email: {
     type: String,
     required: true,
-    unique: true,
     lowercase: true,
     trim: true,
     match: [
@@ -41,8 +40,7 @@ const userSchema = new Schema<IUser>({
     select: false // Don't include password in queries by default
   },
   googleId: {
-    type: String,
-    sparse: true // Allows multiple null values
+    type: String
   },
   avatar: {
     type: String,
@@ -96,7 +94,7 @@ userSchema.methods.toJSON = function () {
 };
 
 // Indexes for better query performance
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 });
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ googleId: 1 }, { sparse: true });
 
 export const User = mongoose.model<IUser>('User', userSchema);
