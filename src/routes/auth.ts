@@ -5,14 +5,18 @@ import {
   resendOTP, 
   login,
   verifyLoginOTP, 
-  getCurrentUser 
+  getCurrentUser,
+  googleAuth,
+  checkAuthMethod
 } from '../controllers/authController.js';
 import { authenticate } from '../middleware/auth.js';
 import { 
   registerValidation, 
   loginValidation, 
   otpValidation, 
-  emailValidation 
+  emailValidation,
+  googleAuthValidation,
+  checkAuthMethodValidation
 } from '../middleware/validation.js';
 import rateLimit from 'express-rate-limit';
 
@@ -43,6 +47,10 @@ router.post('/verify-otp', authLimiter, otpValidation, verifyOTP);
 router.post('/resend-otp', otpLimiter, emailValidation, resendOTP);
 router.post('/login', authLimiter, emailValidation, login);
 router.post('/verify-login-otp', authLimiter, otpValidation, verifyLoginOTP);
+
+// Google Authentication routes
+router.post('/google', authLimiter, googleAuthValidation, googleAuth);
+router.post('/check-auth-method', authLimiter, checkAuthMethodValidation, checkAuthMethod);
 
 // Protected routes
 router.get('/me', authenticate, getCurrentUser);

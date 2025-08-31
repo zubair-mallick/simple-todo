@@ -10,7 +10,8 @@ export interface IUser extends Document {
   otp?: string;
   otpExpires?: Date;
   lastOTPSent?: Date;
-  authProvider: 'otp';
+  authProvider: 'otp' | 'google';
+  googleId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -58,9 +59,13 @@ const userSchema = new Schema<IUser>({
   },
   authProvider: {
     type: String,
-    enum: ['otp'],
+    enum: ['otp', 'google'],
     required: true,
     default: 'otp'
+  },
+  googleId: {
+    type: String,
+    sparse: true // Allows multiple documents with null/undefined googleId, but ensures uniqueness when present
   }
 }, {
   timestamps: true,

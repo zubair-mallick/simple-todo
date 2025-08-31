@@ -3,6 +3,7 @@ import { validationResult } from 'express-validator';
 import { User, IUser } from '../models/User.js';
 import { generateToken } from '../utils/jwt.js';
 import { generateOTP, getOTPExpiration, sendOTPEmail, sendWelcomeEmail } from '../utils/email.js';
+import { verifyFirebaseToken } from '../config/firebase.js';
 
 // Register with email
 export const register = async (req: Request, res: Response): Promise<void> => {
@@ -469,6 +470,169 @@ export const getCurrentUser = async (req: Request & { user?: { userId: string } 
     });
   } catch (error) {
     console.error('Get current user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Google Authentication
+export const googleAuth = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({
+        success: false,
+        message: 'Validation errors',
+        errors: errors.array()
+      });
+      return;
+    }
+
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      res.status(400).json({
+        success: false,
+        message: 'Firebase ID token is required'
+      });
+      return;
+    }
+
+    // Verify Firebase token
+    let decodedToken;
+    try {
+      decodedToken = await verifyFirebaseToken(idToken);
+    } catch (error) {
+      res.status(401).json({
+        success: false,
+        message: 'Invalid Firebase token'
+      });
+      return;
+    }
+
+    const { uid, email, name, picture } = decodedToken;
+
+    if (!email) {
+      res.status(400).json({
+        success: false,
+        message: 'Email is required for authentication'
+      });
+      return;
+    }
+
+    // Check if user already exists
+    let user = await User.findOne({ 
+      $or: [
+        { email: email },
+        { googleId: uid }
+      ]
+    });
+
+    if (user) {
+      // User exists, check if they need to update their auth provider
+      if (user.authProvider === 'otp' && !user.googleId) {
+        // User registered with OTP, now logging in with Google - link accounts
+        user.googleId = uid;
+        user.authProvider = 'google';
+        if (picture) user.avatar = picture;
+        await user.save();
+      } else if (user.authProvider === 'google' && user.googleId !== uid) {
+        // Different Google account
+        res.status(400).json({
+          success: false,
+          message: 'This email is associated with a different Google account'
+        });
+        return;
+      }
+    } else {
+      // Create new user
+      user = new User({
+        name: name || 'User',
+        email: email,
+        googleId: uid,
+        avatar: picture || null,
+        authProvider: 'google',
+        isVerified: true // Google accounts are pre-verified
+      });
+
+      await user.save();
+
+      // Send welcome email
+      try {
+        await sendWelcomeEmail(user.email, user.name);
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+      }
+    }
+
+    // Generate JWT token
+    const token = generateToken(user._id as any, user.email);
+
+    res.status(200).json({
+      success: true,
+      message: user.createdAt.getTime() === user.updatedAt.getTime() ? 'Account created successfully' : 'Login successful',
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          authProvider: user.authProvider
+        },
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Google authentication error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Check auth method for email
+export const checkAuthMethod = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({
+        success: false,
+        message: 'Validation errors',
+        errors: errors.array()
+      });
+      return;
+    }
+
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: 'User not found',
+        data: {
+          authMethod: null,
+          userExists: false
+        }
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User found',
+      data: {
+        authMethod: user.authProvider,
+        userExists: true,
+        isVerified: user.isVerified
+      }
+    });
+  } catch (error) {
+    console.error('Check auth method error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
