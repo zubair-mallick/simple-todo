@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import logoIcon from '../assets/icon.svg';
+import bgImage from '../assets/bgimage.jpg';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [keepLoggedIn, setKeepLoggedIn] = useState(false);
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -47,127 +50,231 @@ const LoginPage: React.FC = () => {
     }
   };
 
-
   return (
-    <div className="min-h-screen bg-white flex">
-      {/* Left side - Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24">
-        <div className="mx-auto w-full max-w-sm lg:w-96">
+    <>
+      {/* Desktop Design - matches Figma exactly */}
+      <div className="hidden lg:flex w-full h-screen overflow-hidden">
+        {/* Left Column - Form Section */}
+        <div className="w-1/2 bg-white flex flex-col justify-center px-16">
           {/* Logo */}
-          <div className="flex items-center mb-16">
-            <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
-              <div className="w-4 h-4 bg-white rounded-full"></div>
+          <div className="absolute top-8 left-16">
+            <div className="flex items-center gap-3">
+              <img src={logoIcon} alt="Logo" className="w-8 h-8" />
+              <span className="text-2xl font-semibold leading-[1.1] tracking-[-0.04em] text-[#232323]">HD</span>
             </div>
-            <span className="ml-3 text-xl font-bold text-gray-900">HD</span>
           </div>
 
-          {/* Form */}
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Sign in</h2>
-            <p className="text-gray-600 mb-8">Enter your email to receive an OTP for login.</p>
+          {/* Form Content */}
+          <div className="max-w-sm mx-auto w-full">
+            {/* Title */}
+            <h1 className="text-4xl font-bold text-[#232323] mb-2">Sign in</h1>
+            <p className="text-[#969696] text-lg mb-8">Please login to continue to your account.</p>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              {/* Email Field */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input"
-                  placeholder="jonas_kahnwald@gmail.com"
-                  required
-                />
-              </div>
+            {/* Email Input */}
+            <div className="relative mb-6">
+              <label className="absolute -top-2 left-3 bg-white px-1 text-sm text-[#367AFF] font-medium">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-4 border-2 border-[#367AFF] rounded-lg text-lg outline-none"
+                placeholder="jonas_kahnwald@gmail.com"
+                required
+              />
+            </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isSubmitting || isLoading || !email.trim() || countdown > 0}
-                className="btn btn-primary w-full"
-              >
-                {isSubmitting || isLoading ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Sending OTP...
-                  </span>
-                ) : countdown > 0 ? (
-                  `Wait ${countdown}s`
-                ) : 'Get OTP'}
+            {/* OTP Input */}
+            <div className="relative mb-4">
+              <input
+                type="password"
+                className="w-full px-4 py-4 border border-[#D9D9D9] rounded-lg text-lg outline-none bg-gray-50"
+                placeholder="OTP"
+                disabled
+              />
+              <button className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-[#9A9A9A]">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M1 1l22 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </button>
+            </div>
 
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                </div>
-              </div>
+            {/* Resend OTP */}
+            <div className="mb-6">
+              <button className="text-[#367AFF] hover:underline text-sm font-medium">Resend OTP</button>
+            </div>
 
-              {/* Google Sign In Button */}
-              <GoogleSignInButton
-                onSuccess={handleGoogleSignInSuccess}
-                disabled={isSubmitting || isLoading}
-                text="Sign in with Google"
+            {/* Keep me logged in */}
+            <div className="flex items-center gap-2 mb-8">
+              <input 
+                type="checkbox" 
+                id="keepLoggedIn" 
+                checked={keepLoggedIn}
+                onChange={(e) => setKeepLoggedIn(e.target.checked)}
+                className="w-4 h-4"
               />
+              <label htmlFor="keepLoggedIn" className="text-sm text-[#232323]">Keep me logged in</label>
+            </div>
 
-              {/* Sign up link */}
-              <div className="text-center">
-                <span className="text-gray-600">Need an account? </span>
-                <Link
-                  to="/register"
-                  className="text-primary-600 font-medium hover:text-primary-500"
-                >
-                  Create one
-                </Link>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      {/* Right side - Abstract Design */}
-      <div className="hidden lg:block relative w-0 flex-1">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800">
-          {/* Abstract wave pattern */}
-          <div className="absolute inset-0 opacity-30">
-            <svg
-              className="absolute inset-0 w-full h-full"
-              viewBox="0 0 400 400"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+            {/* Sign in Button */}
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              disabled={isSubmitting || isLoading || !email.trim() || countdown > 0}
+              className="w-full bg-[#367AFF] text-white py-4 rounded-lg text-lg font-semibold mb-6 disabled:opacity-50 hover:bg-[#2563eb] transition-colors"
             >
-              <path
-                d="M0 200C50 150 100 100 150 120C200 140 250 180 300 160C350 140 400 100 400 120V400H0V200Z"
-                fill="url(#gradient1)"
-              />
-              <path
-                d="M0 250C60 200 120 150 180 170C240 190 300 230 360 210C380 200 400 180 400 190V400H0V250Z"
-                fill="url(#gradient2)"
-              />
-              <defs>
-                <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="rgba(59,130,246,0.8)" />
-                  <stop offset="100%" stopColor="rgba(37,99,235,0.6)" />
-                </linearGradient>
-                <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="rgba(37,99,235,0.6)" />
-                  <stop offset="100%" stopColor="rgba(29,78,216,0.8)" />
-                </linearGradient>
-              </defs>
-            </svg>
+              {isSubmitting || isLoading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Sending OTP...
+                </>
+              ) : countdown > 0 ? (
+                `Wait ${countdown}s`
+              ) : (
+                'Sign in'
+              )}
+            </button>
+
+            {/* Create account link */}
+            <p className="text-center text-[#6C6C6C]">
+              Need an account?{' '}
+              <Link
+                to="/register"
+                className="text-[#367AFF] hover:underline underline font-medium"
+              >
+                Create one
+              </Link>
+            </p>
           </div>
         </div>
+
+        {/* Right Column - Background Image */}
+        <div className="w-1/2 relative overflow-hidden p-3">
+          <img 
+            src={bgImage} 
+            alt="Background" 
+            className="w-full h-full object-cover rounded-3xl"
+          />
+        </div>
       </div>
-    </div>
+
+      {/* Mobile Design - matches Figma exactly */}
+      <div className="lg:hidden w-full min-h-screen bg-white flex flex-col">
+        {/* Logo - centered with top padding */}
+        <div className="flex justify-center pt-16 pb-8">
+          <div className="flex items-center gap-3">
+            <img src={logoIcon} alt="Logo" className="w-8 h-8" />
+            <span className="text-2xl font-semibold leading-[1.1] tracking-[-0.04em] text-[#232323]">HD</span>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 px-6">
+          {/* Title */}
+          <h1 className="text-4xl font-bold leading-[1.1] tracking-[-0.04em] text-[#232323] text-center mb-4">Sign In</h1>
+          
+          {/* Subtitle */}
+          <div className="text-center mb-12">
+            <p className="text-base font-normal leading-[1.5] text-[#969696]">Please login to continue to your account.</p>
+          </div>
+
+          {/* Email Input */}
+          <div className="relative mb-8">
+            <label className="absolute -top-2 left-3 bg-white px-1 text-sm text-[#367AFF] font-medium">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-5 border-2 border-[#367AFF] rounded-2xl text-lg outline-none"
+              placeholder="jonas_kahnwald@gmail.com"
+              required
+            />
+          </div>
+
+          {/* OTP Input */}
+          <div className="relative mb-6">
+            <input
+              type="password"
+              className="w-full px-4 py-5 border border-[#D9D9D9] rounded-2xl text-lg outline-none bg-gray-50"
+              placeholder="OTP"
+              disabled
+            />
+            <button className="absolute right-4 top-1/2 transform -translate-y-1/2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-[#9A9A9A]">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M1 1l22 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* Resend OTP */}
+          <div className="mb-8">
+            <button className="text-[#367AFF] hover:underline text-sm font-medium underline">Resend OTP</button>
+          </div>
+
+          {/* Keep me logged in */}
+          <div className="flex items-center gap-3 mb-12">
+            <input 
+              type="checkbox" 
+              id="keepLoggedInMobile" 
+              checked={keepLoggedIn}
+              onChange={(e) => setKeepLoggedIn(e.target.checked)}
+              className="w-5 h-5 border-2 border-black rounded-sm"
+            />
+            <label htmlFor="keepLoggedInMobile" className="text-base text-[#232323] font-medium">Keep me logged in</label>
+          </div>
+
+          {/* Sign In Button */}
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={isSubmitting || isLoading || !email.trim() || countdown > 0}
+            className="w-full bg-[#367AFF] text-white py-5 rounded-2xl text-lg font-semibold mb-8 disabled:opacity-50 hover:bg-[#2563eb] transition-colors"
+          >
+            {isSubmitting || isLoading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Sending OTP...
+              </>
+            ) : countdown > 0 ? (
+              `Wait ${countdown}s`
+            ) : (
+              'Sign In'
+            )}
+          </button>
+
+          {/* Create account link */}
+          <div className="text-center mb-8">
+            <span className="text-base font-normal leading-[1.5] text-[#969696]">Need an account?? </span>
+            <Link
+              to="/register"
+              className="text-base font-normal leading-[1.5] text-[#367AFF] hover:underline underline"
+            >
+              Create one
+            </Link>
+          </div>
+          
+          {/* Google Sign In Button */}
+          <GoogleSignInButton
+            onSuccess={handleGoogleSignInSuccess}
+            disabled={isSubmitting || isLoading}
+            text="Sign in with Google"
+            className="border-[#D9D9D9] text-[#232323] hover:bg-[#f9f9f9] rounded-2xl"
+          />
+        </div>
+
+        {/* Home Indicator */}
+        <div className="flex justify-center py-4">
+          <div className="w-[134px] h-[5px] bg-black rounded-full"></div>
+        </div>
+      </div>
+    </>
   );
 };
 

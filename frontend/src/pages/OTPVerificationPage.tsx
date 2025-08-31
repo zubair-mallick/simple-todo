@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 
 const OTPVerificationPage: React.FC = () => {
@@ -9,6 +8,7 @@ const OTPVerificationPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [keepLoggedIn, setKeepLoggedIn] = useState(false);
   const { verifyOTP, verifyLoginOTP, resendOTP, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -66,171 +66,307 @@ const OTPVerificationPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex">
-      {/* Left side - Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24">
-        <div className="mx-auto w-full max-w-sm lg:w-96">
-          {/* Logo */}
-          <div className="flex items-center mb-16">
-            <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
-              <div className="w-4 h-4 bg-white rounded-full"></div>
+    <>
+      {/* Desktop Design - follows mobile design pattern from Figma */}
+      <div className="hidden lg:flex w-[1440px] h-[1024px] bg-white rounded-[32px] border border-[#333333] mx-auto">
+        {/* Left Column */}
+        <div className="flex flex-col self-stretch p-8" style={{ width: '591px' }}>
+          {/* Top section with logo */}
+          <div className="flex flex-col self-stretch gap-2.5" style={{ height: 'auto' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 relative">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                  <path d="M0 0H32V20.08H0V0Z" fill="#367AFF"/>
+                  <path d="M20.75 17.78L29.41 27.1V17.78H20.75Z" fill="#367AFF"/>
+                  <path d="M17.77 20.83H23.24V31.15H17.77V20.83Z" fill="#367AFF"/>
+                  <path d="M11.96 22.55H17.65V32H11.96V22.55Z" fill="#367AFF"/>
+                  <path d="M4.92 20.77H14.16V29.42H4.92V20.77Z" fill="#367AFF"/>
+                  <path d="M0.86 17.77H11.24V23.27H0.86V17.77Z" fill="#367AFF"/>
+                </svg>
+              </div>
+              <span className="text-2xl font-semibold leading-[1.1] tracking-[-0.04em] text-[#232323]">HD</span>
             </div>
-            <span className="ml-3 text-xl font-bold text-gray-900">HD</span>
           </div>
 
-          {/* Form */}
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              {isLogin ? 'Verify Login' : 'Verify Email'}
-            </h2>
-            <p className="text-gray-600 mb-8">
+          {/* Content positioned exactly like Figma */}
+          <div className="flex-1 flex items-center justify-center">
+            <div style={{ width: '399px' }}>
+              {/* Text section */}
+              <div className="text-center mb-8">
+                <h2 className="text-[40px] font-bold leading-[1.1] tracking-[-0.04em] text-[#232323] mb-3">
+                  {isLogin ? 'Verify Login' : 'Verify OTP'}
+                </h2>
+                <p className="text-lg font-normal leading-[1.5] text-[#969696]">
+                  {isLogin 
+                    ? 'Please enter the OTP sent to your email to complete login.' 
+                    : 'Please enter the OTP sent to your email to verify your account.'}
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* OTP Input */}
+                <div className="relative">
+                  <div className="flex items-center gap-2.5 px-4 py-4 border border-[#D9D9D9] rounded-[10px] w-[399px]">
+                    <input
+                      type={showOtp ? 'text' : 'password'}
+                      id="otp"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      className="flex-1 text-lg font-normal leading-[1.5] text-[#232323] bg-transparent border-none outline-none placeholder:text-[#9A9A9A]"
+                      placeholder="Enter OTP"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowOtp(!showOtp)}
+                      className="text-[#9A9A9A] hover:text-[#232323] transition-colors"
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-[#9A9A9A]">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M1 1l22 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Keep me logged in - only for login */}
+                {isLogin && (
+                  <div className="flex items-center gap-2.5">
+                    <div 
+                      className="w-6 h-6 border-2 border-black rounded-sm flex items-center justify-center cursor-pointer"
+                      onClick={() => setKeepLoggedIn(!keepLoggedIn)}
+                    >
+                      {keepLoggedIn && (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20,6 9,17 4,12"/>
+                        </svg>
+                      )}
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      </svg>
+                    </div>
+                    <span className="text-base font-medium leading-[1.5] text-[#232323]">Keep me logged in</span>
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting || isLoading || otp.length === 0}
+                  className="w-[399px] flex items-center justify-center gap-2 px-2 py-4 bg-[#367AFF] rounded-[10px] text-lg font-semibold leading-[1.2] tracking-[-0.01em] text-white disabled:opacity-50 hover:bg-[#2563eb] transition-colors"
+                >
+                  {isSubmitting || isLoading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Verifying...
+                    </>
+                  ) : (isLogin ? 'Verify & Login' : 'Verify & Complete Signup')}
+                </button>
+
+                {/* Resend OTP */}
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={handleResendOTP}
+                    disabled={countdown > 0 || isResending}
+                    className={`text-base font-medium leading-[1.5] ${
+                      countdown > 0 || isResending 
+                        ? 'text-[#9A9A9A] cursor-not-allowed' 
+                        : 'text-[#367AFF] hover:underline cursor-pointer'
+                    }`}
+                  >
+                    {isResending ? (
+                      'Sending...'
+                    ) : countdown > 0 ? (
+                      `Resend OTP in ${countdown}s`
+                    ) : (
+                      'Resend OTP'
+                    )}
+                  </button>
+                </div>
+
+                {/* Back link */}
+                <div className="text-center">
+                  <span className="text-lg font-normal leading-[1.5] text-[#6C6C6C]">Want to go back? </span>
+                  <Link
+                    to={isLogin ? "/" : "/register"}
+                    className="text-lg font-normal leading-[1.5] text-[#6C6C6C] hover:text-[#367AFF] transition-colors"
+                  >
+                    {isLogin ? 'Login' : 'Register'}
+                  </Link>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Background */}
+        <div className="flex justify-stretch items-stretch gap-2.5 p-3" style={{ width: '849px' }}>
+          <div 
+            className="flex-1 rounded-[24px]" 
+            style={{
+              background: 'linear-gradient(135deg, #367AFF 0%, #9333EA 100%)',
+            }}
+          >
+            {/* Background container matching Figma */}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Design - matches Figma mobile OTP verification */}
+      <div className="lg:hidden w-full min-h-screen bg-white rounded-[9px] border border-[#333333] flex flex-col">
+        {/* Status Bar */}
+        <div className="flex justify-between items-center px-8 py-4 text-white">
+          <span className="text-base font-semibold leading-[1.2] tracking-[-0.04em]">9:41</span>
+          <div className="flex items-center gap-1">
+            {/* Mobile signal, wifi, battery icons */}
+            <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+              <rect x="0" y="8" width="3" height="4" fill="white"/>
+              <rect x="4" y="6" width="3" height="6" fill="white"/>
+              <rect x="8" y="4" width="3" height="8" fill="white"/>
+              <rect x="12" y="2" width="3" height="10" fill="white"/>
+            </svg>
+          </div>
+        </div>
+
+        {/* Logo */}
+        <div className="px-6 pt-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 relative">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <path d="M0 0H32V20.08H0V0Z" fill="#367AFF"/>
+                <path d="M20.75 17.78L29.41 27.1V17.78H20.75Z" fill="#367AFF"/>
+                <path d="M17.77 20.83H23.24V31.15H17.77V20.83Z" fill="#367AFF"/>
+                <path d="M11.96 22.55H17.65V32H11.96V22.55Z" fill="#367AFF"/>
+                <path d="M4.92 20.77H14.16V29.42H4.92V20.77Z" fill="#367AFF"/>
+                <path d="M0.86 17.77H11.24V23.27H0.86V17.77Z" fill="#367AFF"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 px-6 py-8">
+          {/* Title */}
+          <h1 className="text-2xl font-bold leading-[1.1] tracking-[-0.04em] text-[#232323] text-center mb-4">
+            {isLogin ? 'Sign In' : 'Verify OTP'}
+          </h1>
+          
+          {/* Subtitle */}
+          <div className="text-center mb-8">
+            <p className="text-base font-normal leading-[1.5] text-[#969696]">
               {isLogin 
                 ? 'Please enter the OTP sent to your email to complete login.' 
                 : 'Please enter the OTP sent to your email to verify your account.'}
             </p>
+          </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              {/* Email display */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  className="input bg-gray-50"
-                  value={email}
-                  readOnly
-                />
-              </div>
-
-              {/* OTP Field */}
-              <div>
-                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
-                  OTP
-                </label>
-                <div className="relative">
-                  <input
-                    type={showOtp ? 'text' : 'password'}
-                    id="otp"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="input pr-10"
-                    placeholder="Enter OTP"
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => setShowOtp(!showOtp)}
-                  >
-                    {showOtp ? (
-                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Submit Button */}
+          {/* OTP Input */}
+          <div className="relative mb-6">
+            <div className="flex items-center gap-2.5 px-4 py-4 border border-[#D9D9D9] rounded-[10px] shadow-sm">
+              <input
+                type={showOtp ? 'text' : 'password'}
+                id="otp-mobile"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="flex-1 text-base font-normal leading-[1.5] text-[#232323] bg-transparent border-none outline-none placeholder:text-[#9A9A9A]"
+                placeholder="Enter OTP"
+                required
+              />
               <button
-                type="submit"
-                disabled={isSubmitting || isLoading || otp.length === 0}
-                className="btn btn-primary w-full"
+                type="button"
+                onClick={() => setShowOtp(!showOtp)}
+                className="text-[#9A9A9A] hover:text-[#232323] transition-colors"
               >
-                {isSubmitting || isLoading ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Verifying...
-                  </span>
-                ) : (isLogin ? 'Verify & Login' : 'Verify & Complete Signup')}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M1 1l22 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </button>
+            </div>
+          </div>
 
-              {/* Resend OTP */}
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={handleResendOTP}
-                  disabled={countdown > 0 || isResending}
-                  className={`font-medium ${
-                    countdown > 0 || isResending 
-                      ? 'text-gray-400 cursor-not-allowed' 
-                      : 'text-primary-600 hover:text-primary-500'
-                  }`}
-                >
-                  {isResending ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Sending...
-                    </span>
-                  ) : countdown > 0 ? (
-                    `Resend OTP in ${countdown}s`
-                  ) : (
-                    'Resend OTP'
-                  )}
-                </button>
-                {countdown > 0 && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    You can request a new OTP in {countdown} seconds
-                  </p>
+          {/* Keep me logged in - only for login */}
+          {isLogin && (
+            <div className="flex items-center gap-2.5 mb-6">
+              <div 
+                className="w-6 h-6 border-2 border-black rounded-sm flex items-center justify-center cursor-pointer"
+                onClick={() => setKeepLoggedIn(!keepLoggedIn)}
+              >
+                {keepLoggedIn && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="20,6 9,17 4,12"/>
+                  </svg>
                 )}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                </svg>
               </div>
+              <span className="text-sm font-medium leading-[1.5] text-[#232323]">Keep me logged in</span>
+            </div>
+          )}
 
-              {/* Back link */}
-              <div className="text-center">
-                <span className="text-gray-600">Want to go back? </span>
-                <Link
-                  to={isLogin ? "/" : "/register"}
-                  className="text-primary-600 font-medium hover:text-primary-500"
-                >
-                  {isLogin ? 'Login' : 'Register'}
-                </Link>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={isSubmitting || isLoading || otp.length === 0}
+            className="w-full flex items-center justify-center gap-2 px-2 py-4 bg-[#367AFF] rounded-[10px] text-lg font-semibold leading-[1.2] tracking-[-0.01em] text-white disabled:opacity-50 hover:bg-[#2563eb] transition-colors mb-6"
+          >
+            {isSubmitting || isLoading ? (
+              <>
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Verifying...
+              </>
+            ) : (isLogin ? 'Sign In' : 'Verify & Complete Signup')}
+          </button>
 
-      {/* Right side - Abstract Design */}
-      <div className="hidden lg:block relative w-0 flex-1">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800">
-          {/* Abstract wave pattern */}
-          <div className="absolute inset-0 opacity-30">
-            <svg
-              className="absolute inset-0 w-full h-full"
-              viewBox="0 0 400 400"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+          {/* Back to sign in/up link */}
+          <div className="text-center mb-6">
+            <span className="text-lg font-normal leading-[1.5] text-[#6C6C6C]">Want to go back? </span>
+            <Link
+              to={isLogin ? "/" : "/register"}
+              className="text-lg font-normal leading-[1.5] text-[#6C6C6C] hover:text-[#367AFF] transition-colors"
             >
-              <path
-                d="M0 200C50 150 100 100 150 120C200 140 250 180 300 160C350 140 400 100 400 120V400H0V200Z"
-                fill="url(#gradient1)"
-              />
-              <path
-                d="M0 250C60 200 120 150 180 170C240 190 300 230 360 210C380 200 400 180 400 190V400H0V250Z"
-                fill="url(#gradient2)"
-              />
-              <defs>
-                <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="rgba(59,130,246,0.8)" />
-                  <stop offset="100%" stopColor="rgba(37,99,235,0.6)" />
-                </linearGradient>
-                <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="rgba(37,99,235,0.6)" />
-                  <stop offset="100%" stopColor="rgba(29,78,216,0.8)" />
-                </linearGradient>
-              </defs>
-            </svg>
+              {isLogin ? 'Sign In' : 'Sign up'}
+            </Link>
+          </div>
+
+          {/* Resend OTP */}
+          <div className="text-center mb-6">
+            <button
+              type="button"
+              onClick={handleResendOTP}
+              disabled={countdown > 0 || isResending}
+              className={`text-sm font-medium leading-[1.5] ${
+                countdown > 0 || isResending 
+                  ? 'text-[#9A9A9A] cursor-not-allowed' 
+                  : 'text-[#367AFF] hover:underline cursor-pointer'
+              }`}
+            >
+              {isResending ? (
+                'Sending...'
+              ) : countdown > 0 ? (
+                `Resend OTP in ${countdown}s`
+              ) : (
+                'Resend OTP'
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Home Indicator */}
+        <div className="flex justify-center pb-4">
+          <div className="w-[134px] h-[5px] bg-black rounded-full"></div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
