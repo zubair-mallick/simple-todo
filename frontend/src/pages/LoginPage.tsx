@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleSignInSuccess = () => {
+    navigate('/dashboard');
+  };
+
+  // Countdown timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (countdown > 0) {
+      interval = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [countdown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email) {
+    if (!email || countdown > 0) {
       return;
     }
 
@@ -21,6 +40,8 @@ const LoginPage: React.FC = () => {
       navigate('/verify-otp', { state: { email, isLogin: true } });
     } catch (error) {
       // Error is handled by toast in AuthContext
+      // Only set countdown if there was an error and user stays on this page
+      setCountdown(30);
     } finally {
       setIsSubmitting(false);
     }
@@ -65,11 +86,38 @@ const LoginPage: React.FC = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isSubmitting || isLoading}
+                disabled={isSubmitting || isLoading || !email.trim() || countdown > 0}
                 className="btn btn-primary w-full"
               >
-                {isSubmitting || isLoading ? 'Sending OTP...' : 'Get OTP'}
+                {isSubmitting || isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending OTP...
+                  </span>
+                ) : countdown > 0 ? (
+                  `Wait ${countdown}s`
+                ) : 'Get OTP'}
               </button>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                </div>
+              </div>
+
+              {/* Google Sign In Button */}
+              <GoogleSignInButton
+                onSuccess={handleGoogleSignInSuccess}
+                disabled={isSubmitting || isLoading}
+                text="Sign in with Google"
+              />
 
               {/* Sign up link */}
               <div className="text-center">

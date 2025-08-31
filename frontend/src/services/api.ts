@@ -72,6 +72,16 @@ export const authAPI = {
     const response = await api.get<APIResponse<{ user: any }>>('/auth/me');
     return response.data;
   },
+
+  googleAuth: async (data: { idToken: string }) => {
+    const response = await api.post<AuthResponse>('/auth/google', data);
+    return response.data;
+  },
+
+  checkAuthMethod: async (data: { email: string }) => {
+    const response = await api.post<APIResponse<{ authMethod: string | null; userExists: boolean; isVerified: boolean }>>('/auth/check-auth-method', data);
+    return response.data;
+  },
 };
 
 // Notes API

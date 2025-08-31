@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import toast from 'react-hot-toast';
+import { signInWithPopup, signOut } from 'firebase/auth';
+import { auth, googleProvider } from '../config/firebase';
 import { authAPI } from '../services/api';
 import type { User } from '../types';
 
@@ -13,6 +15,8 @@ interface AuthContextType {
   verifyOTP: (email: string, otp: string) => Promise<void>;
   verifyLoginOTP: (email: string, otp: string) => Promise<void>;
   resendOTP: (email: string) => Promise<void>;
+  googleSignIn: () => Promise<void>;
+  checkAuthMethod: (email: string) => Promise<{ authMethod: string | null; userExists: boolean; isVerified: boolean }>;
   logout: () => void;
 }
 
@@ -160,6 +164,56 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const googleSignIn = async () => {
+    try {
+      // Sign in with Google using Firebase
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      
+      // Send the ID token to our backend
+      const response = await authAPI.googleAuth({ idToken });
+      
+      if (response.success && response.data) {
+        const { user: userData, token } = response.data;
+        
+        setUser(userData);
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        toast.success(response.message || 'Google authentication successful!');
+      } else {
+        throw new Error(response.message || 'Google authentication failed');
+      }
+    } catch (error: any) {
+      // Sign out from Firebase if backend authentication fails
+      try {
+        await signOut(auth);
+      } catch (signOutError) {
+        console.error('Error signing out from Firebase:', signOutError);
+      }
+      
+      const message = getErrorMessage(error, 'Google authentication failed');
+      toast.error(message);
+      throw error;
+    }
+  };
+
+  const checkAuthMethod = async (email: string) => {
+    try {
+      const response = await authAPI.checkAuthMethod({ email });
+      
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        throw new Error(response.message || 'Failed to check authentication method');
+      }
+    } catch (error: any) {
+      const message = getErrorMessage(error, 'Failed to check authentication method');
+      toast.error(message);
+      throw error;
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('auth_token');
@@ -176,6 +230,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     verifyOTP,
     verifyLoginOTP,
     resendOTP,
+    googleSignIn,
+    checkAuthMethod,
     logout,
   };
 

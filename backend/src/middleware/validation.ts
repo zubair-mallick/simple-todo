@@ -70,6 +70,21 @@ export const emailValidation = [
     .normalizeEmail()
 ];
 
+export const googleAuthValidation = [
+  body('idToken')
+    .notEmpty()
+    .withMessage('Firebase ID token is required')
+    .isString()
+    .withMessage('Firebase ID token must be a string')
+];
+
+export const checkAuthMethodValidation = [
+  body('email')
+    .isEmail()
+    .withMessage('Please enter a valid email address')
+    .normalizeEmail()
+];
+
 // Notes validation rules
 export const createNoteValidation = [
   body('title')

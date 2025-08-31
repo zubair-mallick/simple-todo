@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,11 +7,26 @@ const OTPVerificationPage: React.FC = () => {
   const [otp, setOtp] = useState('');
   const [showOtp, setShowOtp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   const { verifyOTP, verifyLoginOTP, resendOTP, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email || '';
   const isLogin = location.state?.isLogin || false;
+
+  // Countdown timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (countdown > 0) {
+      interval = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [countdown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,10 +51,17 @@ const OTPVerificationPage: React.FC = () => {
   };
 
   const handleResendOTP = async () => {
+    if (countdown > 0 || isResending) return;
+    
+    setIsResending(true);
     try {
       await resendOTP(email);
+      // Start 30 second countdown after successful resend
+      setCountdown(30);
     } catch (error) {
       // Error handled by resendOTP function
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -113,10 +135,18 @@ const OTPVerificationPage: React.FC = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isSubmitting || isLoading}
+                disabled={isSubmitting || isLoading || otp.length === 0}
                 className="btn btn-primary w-full"
               >
-                {isSubmitting || isLoading ? 'Verifying...' : (isLogin ? 'Verify & Login' : 'Verify & Complete Signup')}
+                {isSubmitting || isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Verifying...
+                  </span>
+                ) : (isLogin ? 'Verify & Login' : 'Verify & Complete Signup')}
               </button>
 
               {/* Resend OTP */}
@@ -124,10 +154,32 @@ const OTPVerificationPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleResendOTP}
-                  className="text-primary-600 font-medium hover:text-primary-500"
+                  disabled={countdown > 0 || isResending}
+                  className={`font-medium ${
+                    countdown > 0 || isResending 
+                      ? 'text-gray-400 cursor-not-allowed' 
+                      : 'text-primary-600 hover:text-primary-500'
+                  }`}
                 >
-                  Resend OTP
+                  {isResending ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending...
+                    </span>
+                  ) : countdown > 0 ? (
+                    `Resend OTP in ${countdown}s`
+                  ) : (
+                    'Resend OTP'
+                  )}
                 </button>
+                {countdown > 0 && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    You can request a new OTP in {countdown} seconds
+                  </p>
+                )}
               </div>
 
               {/* Back link */}
