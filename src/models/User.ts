@@ -4,16 +4,15 @@ import bcrypt from 'bcryptjs';
 export interface IUser extends Document {
   name: string;
   email: string;
-  password?: string;
-  googleId?: string;
+  dateOfBirth?: Date;
   avatar?: string;
   isVerified: boolean;
   otp?: string;
   otpExpires?: Date;
-  authProvider: 'email' | 'google';
+  lastOTPSent?: Date;
+  authProvider: 'otp';
   createdAt: Date;
   updatedAt: Date;
-  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
 const userSchema = new Schema<IUser>({
@@ -34,13 +33,8 @@ const userSchema = new Schema<IUser>({
       'Please enter a valid email address'
     ]
   },
-  password: {
-    type: String,
-    minlength: [6, 'Password must be at least 6 characters long'],
-    select: false // Don't include password in queries by default
-  },
-  googleId: {
-    type: String
+  dateOfBirth: {
+    type: Date
   },
   avatar: {
     type: String,
@@ -58,36 +52,26 @@ const userSchema = new Schema<IUser>({
     type: Date,
     select: false
   },
+  lastOTPSent: {
+    type: Date,
+    select: false
+  },
   authProvider: {
     type: String,
-    enum: ['email', 'google'],
-    required: true
+    enum: ['otp'],
+    required: true,
+    default: 'otp'
   }
 }, {
   timestamps: true,
   versionKey: false
 });
 
-// Hash password before saving
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-
-  if (this.password) {
-    this.password = await bcrypt.hash(this.password, 12);
-  }
-  next();
-});
-
-// Compare password method
-userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
-  if (!this.password) return false;
-  return bcrypt.compare(candidatePassword, this.password);
-};
+// No password hashing needed for OTP-only auth
 
 // Remove sensitive fields from JSON output
 userSchema.methods.toJSON = function () {
   const userObject = this.toObject();
-  delete userObject.password;
   delete userObject.otp;
   delete userObject.otpExpires;
   return userObject;
@@ -95,6 +79,5 @@ userSchema.methods.toJSON = function () {
 
 // Indexes for better query performance
 userSchema.index({ email: 1 }, { unique: true });
-userSchema.index({ googleId: 1 }, { sparse: true });
 
 export const User = mongoose.model<IUser>('User', userSchema);

@@ -19,7 +19,7 @@ export const generateToken = (userId: Types.ObjectId, email: string): string => 
     throw new Error('JWT_SECRET is not defined in environment variables');
   }
 
-  return jwt.sign(payload, secret, { expiresIn });
+  return jwt.sign(payload, secret, { expiresIn } as jwt.SignOptions);
 };
 
 export const verifyToken = (token: string): JWTPayload => {

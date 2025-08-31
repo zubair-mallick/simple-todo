@@ -3,8 +3,8 @@ import {
   register, 
   verifyOTP, 
   resendOTP, 
-  login, 
-  googleAuth, 
+  login,
+  verifyLoginOTP, 
   getCurrentUser 
 } from '../controllers/authController.js';
 import { authenticate } from '../middleware/auth.js';
@@ -41,8 +41,8 @@ const otpLimiter = rateLimit({
 router.post('/register', authLimiter, registerValidation, register);
 router.post('/verify-otp', authLimiter, otpValidation, verifyOTP);
 router.post('/resend-otp', otpLimiter, emailValidation, resendOTP);
-router.post('/login', authLimiter, loginValidation, login);
-router.post('/google', authLimiter, googleAuth);
+router.post('/login', authLimiter, emailValidation, login);
+router.post('/verify-login-otp', authLimiter, otpValidation, verifyLoginOTP);
 
 // Protected routes
 router.get('/me', authenticate, getCurrentUser);
