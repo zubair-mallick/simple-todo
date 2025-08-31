@@ -252,12 +252,3 @@ Delete a note
 - [x] **Account Linking**: Seamlessly link OTP and Google accounts
 - [x] **Production-Ready**: Complete authentication flow with security features
 
-🔄 **Future Enhancements**
-- [ ] Advanced note features (categories, tags)
-- [ ] Rich text editor for notes
-- [ ] File attachments
-- [ ] Search and filter functionality
-- [ ] Export/import notes
-- [ ] Mobile app version
-- [ ] Production deployment
-
