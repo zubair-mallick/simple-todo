@@ -16,22 +16,38 @@ export const registerValidation = [
     .isLength({ max: 100 })
     .withMessage('Email cannot exceed 100 characters'),
   
-  body('password')
-    .isLength({ min: 6, max: 128 })
-    .withMessage('Password must be between 6 and 128 characters')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain at least one lowercase letter, one uppercase letter, and one number')
+  body('dateOfBirth')
+    .optional()
+    .isISO8601()
+    .withMessage('Please enter a valid date of birth')
+    .custom((value) => {
+      if (value) {
+        const dob = new Date(value);
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const monthDiff = today.getMonth() - dob.getMonth();
+        
+        // Adjust age if birthday hasn't occurred this year
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+          age--;
+        }
+        
+        if (age < 13) {
+          throw new Error('You must be at least 13 years old to register');
+        }
+        if (age > 120) {
+          throw new Error('Please enter a valid date of birth');
+        }
+      }
+      return true;
+    })
 ];
 
 export const loginValidation = [
   body('email')
     .isEmail()
     .withMessage('Please enter a valid email address')
-    .normalizeEmail(),
-  
-  body('password')
-    .notEmpty()
-    .withMessage('Password is required')
+    .normalizeEmail()
 ];
 
 export const otpValidation = [
