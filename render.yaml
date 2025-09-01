@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: note-taking-app-backend
+    env: node
+    plan: free
+    rootDir: ./backend
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        fromService:
+          type: web
+          name: note-taking-app-backend
+          property: port
+    healthCheckPath: /api/health
