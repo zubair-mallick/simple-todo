@@ -332,12 +332,26 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     // Send OTP email
     try {
+      console.log(`Attempting to send OTP to ${email}`);
       await sendOTPEmail(email, otp);
+      console.log(`OTP sent successfully to ${email}`);
     } catch (emailError) {
       console.error('Failed to send OTP email:', emailError);
+      
+      // For development/testing, log the OTP so you can still test
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`🚨 EMAIL FAILED - OTP for ${email}: ${otp} (valid for 10 minutes)`);
+        res.status(200).json({
+          success: true,
+          message: 'Login OTP generated. Check server logs for OTP (email service unavailable).',
+          ...(process.env.NODE_ENV !== 'production' && { otp }) // Include OTP in response for development
+        });
+        return;
+      }
+      
       res.status(500).json({
         success: false,
-        message: 'Failed to send login OTP. Please try again.'
+        message: 'Email service temporarily unavailable. Please try again later.'
       });
       return;
     }
