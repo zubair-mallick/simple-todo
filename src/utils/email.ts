@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 interface EmailOptions {
   to: string;
@@ -16,35 +16,40 @@ export const getOTPExpiration = (): Date => {
   return expiration;
 };
 
-const createTransporter = () => {
-  console.log('Creating email transporter with host:', process.env.EMAIL_HOST);
-  
-  return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: parseInt(process.env.EMAIL_PORT || '587'),
-    secure: process.env.EMAIL_PORT === '465', // true for 465, false for other ports
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
-};
+// Initialize Resend with API key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendEmail = async (options: EmailOptions): Promise<void> => {
   try {
-    const transporter = createTransporter();
-
-    const mailOptions = {
-      from: `"Note Taking App" <${process.env.EMAIL_USER}>`,
-      to: options.to,
+    console.log('📧 Sending email via Resend to:', options.to);
+    
+    const { data, error } = await resend.emails.send({
+      from: process.env.FROM_EMAIL || 'HD Notes <noreply@hdnotes.dev>',
+      to: [options.to],
       subject: options.subject,
-      html: options.html
-    };
+      html: options.html,
+    });
 
-    await transporter.sendMail(mailOptions);
-    console.log(` Email sent successfully to ${options.to}`);
+    if (error) {
+      console.error('❌ Resend error:', error);
+      throw new Error(`Failed to send email: ${error.message}`);
+    }
+
+    console.log('✅ Email sent successfully via Resend, ID:', data?.id);
   } catch (error) {
-    console.error(' Email sending failed:', error);
+    console.error('🚨 Email sending failed:', error);
+    
+    // Development fallback - log the OTP to console
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
+      console.log('🔧 DEV MODE: Email failed, but continuing...');
+      if (options.html.includes('OTP')) {
+        const otpMatch = options.html.match(/>\s*(\d{6})\s*</); 
+        if (otpMatch) {
+          console.log('🔑 DEV OTP for', options.to, ':', otpMatch[1]);
+        }
+      }
+    }
+    
     throw new Error('Failed to send email');
   }
 };
