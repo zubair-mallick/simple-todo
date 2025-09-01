@@ -4,7 +4,7 @@ import type { AuthResponse, APIResponse, Note } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// Create axios instance
+// Create axios instance for general API calls
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000, // 30 seconds timeout
@@ -13,59 +13,72 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
-api.interceptors.request.use((config) => {
+// Create separate axios instance for auth operations with longer timeout
+const authApi = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 120000, // 2 minutes timeout for auth operations (email can be slow)
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor to add auth token (for both instances)
+const addAuthToken = (config: any) => {
   const token = localStorage.getItem('auth_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
-});
+};
 
-// Response interceptor for error handling
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // Only redirect on 401 if we're on a protected route and have a token
-    if (error.response?.status === 401 && localStorage.getItem('auth_token')) {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user');
-      toast.error('Session expired. Please login again.');
-      // Use a timeout to allow current operations to complete
-      setTimeout(() => {
-        if (window.location.pathname !== '/' && window.location.pathname !== '/register' && window.location.pathname !== '/verify-otp') {
-          window.location.href = '/';
-        }
-      }, 100);
-    }
-    return Promise.reject(error);
+// Response interceptor for error handling (for both instances)
+const handleResponseError = (error: any) => {
+  // Only redirect on 401 if we're on a protected route and have a token
+  if (error.response?.status === 401 && localStorage.getItem('auth_token')) {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    toast.error('Session expired. Please login again.');
+    // Use a timeout to allow current operations to complete
+    setTimeout(() => {
+      if (window.location.pathname !== '/' && window.location.pathname !== '/register' && window.location.pathname !== '/verify-otp') {
+        window.location.href = '/';
+      }
+    }, 100);
   }
-);
+  return Promise.reject(error);
+};
 
-// Auth API
+// Apply interceptors to both instances
+api.interceptors.request.use(addAuthToken);
+api.interceptors.response.use((response) => response, handleResponseError);
+
+authApi.interceptors.request.use(addAuthToken);
+authApi.interceptors.response.use((response) => response, handleResponseError);
+
+// Auth API - Using authApi with longer timeout for operations that involve email sending
 export const authAPI = {
   register: async (data: { name: string; email: string; dateOfBirth: string }) => {
-    const response = await api.post<AuthResponse>('/auth/register', data);
+    const response = await authApi.post<AuthResponse>('/auth/register', data);
     return response.data;
   },
 
   verifyOTP: async (data: { email: string; otp: string }) => {
-    const response = await api.post<AuthResponse>('/auth/verify-otp', data);
+    const response = await authApi.post<AuthResponse>('/auth/verify-otp', data);
     return response.data;
   },
 
   resendOTP: async (data: { email: string }) => {
-    const response = await api.post<APIResponse>('/auth/resend-otp', data);
+    const response = await authApi.post<APIResponse>('/auth/resend-otp', data);
     return response.data;
   },
 
   login: async (data: { email: string }) => {
-    const response = await api.post<APIResponse>('/auth/login', data);
+    const response = await authApi.post<APIResponse>('/auth/login', data);
     return response.data;
   },
 
   verifyLoginOTP: async (data: { email: string; otp: string }) => {
-    const response = await api.post<AuthResponse>('/auth/verify-login-otp', data);
+    const response = await authApi.post<AuthResponse>('/auth/verify-login-otp', data);
     return response.data;
   },
 
@@ -75,7 +88,7 @@ export const authAPI = {
   },
 
   googleAuth: async (data: { idToken: string }) => {
-    const response = await api.post<AuthResponse>('/auth/google', data);
+    const response = await authApi.post<AuthResponse>('/auth/google', data);
     return response.data;
   },
 
