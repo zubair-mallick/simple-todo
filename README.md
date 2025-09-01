@@ -1,24 +1,34 @@
 # Advanced Todo Application with Dual Authentication
 
-> A production-ready, full-stack todo application featuring dual authentication methods (OTP + Google OAuth), advanced note management, and pixel-perfect UI design matching Figma specifications.
+> A production-ready, full-stack todo application featuring dual authentication methods (OTP + Google OAuth), advanced note management, and UI design matching Figma specifications.
 
 ## 🚀 Demo & Live Preview
 
 **Live Demo:** [https://your-app-demo.vercel.app](https://your-app-demo.vercel.app)
 
 ### Desktop Experience
-![Desktop Login](demo-images/desktop-login.png)
-*Clean desktop login with background image integration*
+![Desktop Sign Up](demo/sign_up_page_pc.jpg)
+*Clean desktop sign-up page with professional design*
 
-![Desktop Dashboard](demo-images/desktop-dashboard.png) 
+![Desktop OTP Verification](demo/otp_sign_up%20page_laptop.jpg)
+*Secure OTP verification on desktop*
+
+![Google OAuth Login](demo/oAuth_login.jpg)
+*Seamless Google OAuth integration*
+
+![Dashboard with Note Creation](demo/dashboard_add_note.jpg)
 *Comprehensive dashboard with advanced note management*
 
 ### Mobile Experience  
-![Mobile Login](demo-images/mobile-login.png)
-*Mobile-first responsive design*
+![Mobile Dashboard](demo/mobile%20dashboard.jpg)
+*Touch-optimized mobile interface with responsive design*
 
-![Mobile Dashboard](demo-images/mobile-dashboard.png)
-*Touch-optimized mobile interface*
+### Email Integration
+![OTP Email](demo/otp_email.jpg)
+*Professional OTP email delivery*
+
+![Welcome Email](demo/automated_welcome_email.jpg)
+*Automated welcome email system*
 
 ## 🛠️ Technology Stack
 
