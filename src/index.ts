@@ -13,10 +13,42 @@ config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+// CORS configuration
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:4173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:4173'
+];
+
+// Add custom frontend URL if provided
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || ['http://localhost:3000', 'http://localhost:5173'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // In production, be more flexible with localhost and 127.0.0.1
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    const msg = `The CORS policy for this origin doesn't allow access from the particular origin: ${origin}`;
+    return callback(new Error(msg), false);
+  },
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Security middleware
@@ -33,7 +65,23 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS configuration
+// Request timeout middleware
+app.use((req, res, next) => {
+  // Set timeout for all requests
+  req.setTimeout(60000, () => {
+    console.error('Request timeout for:', req.method, req.originalUrl);
+    if (!res.headersSent) {
+      res.status(408).json({
+        success: false,
+        message: 'Request timeout'
+      });
+    }
+  });
+  
+  // Log incoming requests
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl} from ${req.get('origin') || 'unknown origin'}`);
+  next();
+});
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
